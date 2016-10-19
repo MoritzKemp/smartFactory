@@ -1,0 +1,16 @@
+@startuml
+(*) --> "Quantify order"
+If "check order type" then
+--> [force fitted bearing] "collect bearing box form shelf"
+--> "insert box into assembly aid tray"
+--> "load aid tray with bearing box to force fitting machine"
+--> "force fitting of the bearing with the bearing box"
+--> "examine quality of fitting"
+--> "transport force fitted bearing and bearing box to delivery box"
+--> (*)
+else
+--> [bearing box] "collect bearing box from shelf"
+--> "transport bearing box to delivery box"
+Endif
+--> (*)
+@enduml
