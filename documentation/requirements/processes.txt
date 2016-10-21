@@ -1,16 +1,19 @@
 @startuml
-(*) --> "Quantify order"
-If "check order type" then
---> [force fitted bearing] "collect bearing box form shelf"
---> "insert box into assembly aid tray"
---> "load aid tray with bearing box to force fitting machine"
---> "force fitting of the bearing with the bearing box"
+(*) --> "collect bearing box form shelf"
+--> "quantify order"
+If "" then
+--> [force fitted bearing in bearing box] "collect bearing form shelf"
+--> "collect assembly aid tray from shelf"
+--> "merge bearing and bearing box into assembly aid tray"
+--> "load aid tray to force fitting machine"
+--> "trigger force fitting machine"
 --> "examine quality of fitting"
---> "transport force fitted bearing and bearing box to delivery box"
+--> "remove fitted bearing from assembly aid tray"
+--> "put assembly aid tray back to inventory shelf"
+--> "put fitted bearing into delivery box"
 --> (*)
 else
---> [bearing box] "collect bearing box from shelf"
---> "transport bearing box to delivery box"
+--> [only bearing box] "put bearing box into delivery box"
 Endif
 --> (*)
 @enduml
