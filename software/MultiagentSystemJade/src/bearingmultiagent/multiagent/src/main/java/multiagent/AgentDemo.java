@@ -1,0 +1,51 @@
+package multiagent;
+
+import jade.core.AgentContainer;
+import jade.core.Profile;
+import jade.core.ProfileImpl;
+import jade.core.Runtime;
+import jade.wrapper.AgentController;
+import jade.wrapper.ContainerController;
+import jade.wrapper.StaleProxyException;
+
+public class AgentDemo {
+
+	public static void main(String[] args) {
+		 String host;
+	        int port;
+	        String platform = null;     //default name
+	        boolean main = true;
+	 
+	        host = "localhost";
+	        port = -1;          //default-port 1099
+	 
+	        Runtime runtime = Runtime.instance();
+	 
+	        Profile profile = null;
+	        AgentContainer container = null;
+	 
+	        profile = new ProfileImpl(host, port, platform, main);
+	 
+	        //Container erzeugen
+	        container = (AgentContainer) runtime.createMainContainer(profile);
+	 
+	        // Agenten erzeugen und startet - oder aussteigen.
+	        try {
+	            AgentController agent1 = ((ContainerController) container).createNewAgent(
+	                        "Agent 5",
+	                        TestAgent.class.getName(),
+	                        args);
+	                        agent1.start();
+//	                        AgentController agent2 = ((ContainerController) container).createNewAgent(
+//	    	                        "RobotAgent 1",
+//	    	                        RobotAgent.class.getName(),
+//	    	                        args);
+//	    	                        agent2.start();
+	        } catch(StaleProxyException e) {
+	            throw new RuntimeException(e);
+	        }
+	    }
+
+	}
+
+

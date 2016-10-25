@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="java.lang.Class"/>
+<fullyQualifiedTypeName name="multiagent.AgentDemo"/>
+<fullyQualifiedTypeName name="jade.core.Agent"/>
+<fullyQualifiedTypeName name="jade.core.AgentContainer"/>
+<fullyQualifiedTypeName name="jade.core.Runtime"/>
+</qualifiedTypeNameHistroy>

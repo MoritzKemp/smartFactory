@@ -1,0 +1,86 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.multiagent.maven</groupId>
+  <artifactId>multiagent</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <repositories>
+  <repository> 
+    <id>tilab</id> 
+    <url>http://jade.tilab.com/maven/</url> 
+</repository>
+</repositories>
+<dependencies>
+<dependency>  
+    <groupId>com.tilab.jade</groupId> 
+    <artifactId>jade</artifactId> 
+    <version>4.4.0</version>  
+</dependency>
+</dependencies>
+<build>
+     <plugins>
+     <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>      
+      <plugin>
+       <groupId>org.codehaus.mojo</groupId>
+       <artifactId>exec-maven-plugin</artifactId>
+       <version>1.1.1</version>
+       <executions>
+        <execution>
+         <phase>test</phase>
+         <goals>
+          <goal>java</goal>
+         </goals>
+         <configuration>
+          <mainClass>multiagent.AgentDemo</mainClass>
+          <arguments>
+          </arguments>
+         </configuration>
+        </execution>
+       </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <configuration>
+          <archive>
+            Erweitert das default-Manifest:
+            <manifest>
+              <mainClass>multiagent.AgentDemo</mainClass>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>              
+            </manifest>
+          </archive>
+        </configuration>
+        <executions>
+          <!-- Hier wird ein zusätzliches JAR erzeugt, das den Konventionen
+          von JADE entspricht und so von der Kommandozeile ausgeführt
+          oder über den RMA in einen schon laufenden Container geladen
+          werden kann. -->
+          <execution>
+            <id>create-jade-agent</id>
+            <goals><goal>jar</goal></goals>
+            <phase>test</phase>
+            <configuration>
+              <finalName>multiagent_TestAgent</finalName>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+     </plugins>
+    </build>
+</project>
