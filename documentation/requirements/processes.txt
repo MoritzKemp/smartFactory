@@ -1,0 +1,19 @@
+@startuml
+(*) --> "collect bearing box form shelf"
+--> "quantify order"
+If "" then
+--> [force fitted bearing in bearing box] "collect bearing form shelf"
+--> "collect assembly aid tray from shelf"
+--> "merge bearing and bearing box into assembly aid tray"
+--> "load aid tray to force fitting machine"
+--> "trigger force fitting machine"
+--> "examine quality of fitting"
+--> "remove fitted bearing from assembly aid tray"
+--> "put assembly aid tray back to inventory shelf"
+--> "put fitted bearing into delivery box"
+--> (*)
+else
+--> [only bearing box] "put bearing box into delivery box"
+Endif
+--> (*)
+@enduml
