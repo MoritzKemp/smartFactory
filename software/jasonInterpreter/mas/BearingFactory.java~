@@ -27,6 +27,8 @@ public class BearingFactory extends Environment {
 	
 	//Perceptions
 	public static final Literal moveRight = Literal.parseLiteral("moveRight");
+	public static final Literal dropBearingBox = Literal.parseLiteral("dropBearingBox");
+	public static final Literal envSize = Literal.parseLiteral("envSize");
 	
 	private BearingFactoryModel model;
 	private BearingFactoryView view;
@@ -47,9 +49,12 @@ public class BearingFactory extends Environment {
     @Override
     public boolean executeAction(String agName, Structure action) {
 		try {
-			if(action.equals(moveRight)){
+			
+			if(action.equals(moveRight)) {
 				logger.info("moveRight action performed!");
 				model.moveRight();
+			} else if(action.equals(dropBearingBox)) {
+				logger.info("drop bearing box");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -84,8 +89,10 @@ public class BearingFactory extends Environment {
 		
 		private BearingFactoryModel(){
 			super(grid_height, grid_width, nAg);
-			add(stock, 2, 2);
-			add(assembly_aid_tray, 7, 2);
+			add(stock, 3, 2);
+			add(assembly_aid_tray, 15, 2);
+			add(force_fitting_machine, 18, 7);
+			add(delivery_box, 6, 17);
 			setAgPos(0,0,0);
 		}
 		
@@ -97,6 +104,7 @@ public class BearingFactory extends Environment {
 	}
 	
 	class BearingFactoryView extends GridWorldView {
+		
 		public BearingFactoryView(BearingFactoryModel model){
 			super(model, "Bearing Factory", 400);
 			setVisible(true);
@@ -122,25 +130,27 @@ public class BearingFactory extends Environment {
 		}
 		
 		public void drawStock(Graphics g, int x, int y){
-			logger.info("paint stock");
-			g.setColor(Color.green);
 			super.drawObstacle(g, x, y);
+			g.setColor(Color.white);
+			drawString(g, x, y, new Font("Arial", Font.BOLD, 16),"St");
 		}
 		
 		public void drawAidTray(Graphics g, int x, int y){
-			logger.info("draw aid tray");
-			g.setColor(Color.orange);
 			super.drawObstacle(g, x, y);
+			g.setColor(Color.white);
+			drawString(g, x, y, new Font("Arial", Font.BOLD, 16),"Ai");
 		}
 		
 		public void drawMachine(Graphics g, int x, int y){
 			super.drawObstacle(g, x, y);
-			g.setColor(Color.gray);
+			g.setColor(Color.white);
+			drawString(g, x, y, new Font("Arial", Font.BOLD, 16),"Fo");
 		}
 		
 		public void drawDeliveryBox(Graphics g, int x, int y){
 			super.drawObstacle(g, x, y);
-			g.setColor(Color.blue);
+			g.setColor(Color.white);
+			drawString(g, x, y, new Font("Arial", Font.BOLD, 16),"De");
 		}
 		
 	}

@@ -15,18 +15,28 @@ import java.util.logging.Logger;
 
 public class BearingFactory extends Environment {
 
+	//Environment specs 
 	public static final int grid_height = 20;
 	public static final int grid_width = 20;
 	public static final int nAg = 1;
 	
-	//Static objects
+	//Graphical key of static objects
 	public static final int stock = 8;
 	public static final int assembly_aid_tray = 16;
 	public static final int force_fitting_machine = 32;
 	public static final int delivery_box = 64;
 	
+	//Static object locations
+	public static final Location stockLoc 			= new Location(3, 2);
+	public static final Location aidTrayLoc 		= new Location(15, 2); 
+	public static final Location forceFittingLoc 	= new Location(18, 7);
+	public static final Location deliveryBoxLoc 	= new Location(6, 17); 
+	
 	//Perceptions
-	public static final Literal moveRight = Literal.parseLiteral("moveRight");
+	public static final Literal moveEast = Literal.parseLiteral("moveEast");
+	public static final Literal moveSouth = Literal.parseLiteral("moveSouth");
+	public static final Literal moveNorth = Literal.parseLiteral("moveNorth");
+	public static final Literal moveWest = Literal.parseLiteral("moveWest");
 	public static final Literal dropBearingBox = Literal.parseLiteral("dropBearingBox");
 	public static final Literal envSize = Literal.parseLiteral("envSize");
 	
@@ -41,8 +51,18 @@ public class BearingFactory extends Environment {
         model = new BearingFactoryModel();
 		view = new BearingFactoryView(model);
 		model.setView(view);
+		
+		//Add static obejct locations as global percept beleifs
 		Literal envSize = Literal.parseLiteral("envSize("+grid_width+","+grid_height+")");
 		addPercept(envSize);
+		Literal stockPos = Literal.parseLiteral("pos(stock, "+stockLoc.x+","+stockLoc.y+")");
+		addPercept(stockPos);
+		Literal aidTrayPos = Literal.parseLiteral("pos(aidTray, "+aidTrayLoc.x+","+aidTrayLoc.y+")");
+		addPercept(aidTrayPos);
+		Literal forceFittingPos = Literal.parseLiteral("pos(forceFitting, "+forceFittingLoc.x+","+forceFittingLoc.y+")");
+		addPercept(aidTrayPos);
+		Literal deliveryBoxPos = Literal.parseLiteral("pos(deliveryBox, "+deliveryBoxLoc.x+","+deliveryBoxLoc.y+")");
+		addPercept(deliveryBoxPos);
 		updatePercepts();
     }
 
@@ -50,9 +70,14 @@ public class BearingFactory extends Environment {
     public boolean executeAction(String agName, Structure action) {
 		try {
 			
-			if(action.equals(moveRight)) {
-				logger.info("moveRight action performed!");
-				model.moveRight();
+			if(action.equals(moveEast)) {
+				model.moveEast();
+			} else if(action.equals(moveSouth)) {
+				model.moveSouth();
+			} else if(action.equals(moveNorth)) {
+				model.moveNorth();
+			} else if(action.equals(moveWest)) {
+				model.moveWest();
 			} else if(action.equals(dropBearingBox)) {
 				logger.info("drop bearing box");
 			}
@@ -72,10 +97,11 @@ public class BearingFactory extends Environment {
 	
 	// Update agent locations
 	public void updatePercepts(){
-		clearPercepts();
+		clearPercepts("robot");
+		//Update agent locations
 		Location loc1 = model.getAgPos(0);
 		Literal pos1 = Literal.parseLiteral("pos(r1,"+loc1.x+","+loc1.y+")");
-		addPercept(pos1);
+		addPercept("robot", pos1);
 	}
 
     /** Called before the end of MAS execution */
@@ -89,16 +115,34 @@ public class BearingFactory extends Environment {
 		
 		private BearingFactoryModel(){
 			super(grid_height, grid_width, nAg);
-			add(stock, 3, 2);
-			add(assembly_aid_tray, 15, 2);
-			add(force_fitting_machine, 18, 7);
-			add(delivery_box, 6, 17);
-			setAgPos(0,0,0);
+			add(stock, stockLoc);
+			add(assembly_aid_tray, aidTrayLoc);
+			add(force_fitting_machine, forceFittingLoc);
+			add(delivery_box, deliveryBoxLoc);
+			setAgPos(0,10,10);
 		}
 		
-		public void moveRight()  throws Exception{
+		public void moveEast()  throws Exception{
 			Location loc_1 = getAgPos(0);
 			loc_1.x++;
+			setAgPos(0, loc_1);
+		}
+		
+		public void moveSouth()  throws Exception{
+			Location loc_1 = getAgPos(0);
+			loc_1.y++;
+			setAgPos(0, loc_1);
+		}
+		
+		public void moveNorth()  throws Exception{
+			Location loc_1 = getAgPos(0);
+			loc_1.y--;
+			setAgPos(0, loc_1);
+		}
+		
+		public void moveWest()  throws Exception{
+			Location loc_1 = getAgPos(0);
+			loc_1.x--;
 			setAgPos(0, loc_1);
 		}
 	}
