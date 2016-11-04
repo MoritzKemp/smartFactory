@@ -87,7 +87,7 @@ public class BearingFactory extends Environment {
 		informAgsEnvironmentChanged();
 		
 		try {                                                                                                 
-            Thread.sleep(2000);                                                                                
+            Thread.sleep(1000);                                                                                
         } catch (Exception e) {}  
 		
 		updatePercepts();
