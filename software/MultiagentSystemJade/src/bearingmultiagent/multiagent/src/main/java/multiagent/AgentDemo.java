@@ -1,21 +1,20 @@
 package multiagent;
 
-import jade.core.AgentContainer;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.wrapper.AgentController;
-import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
+import jade.wrapper.AgentContainer;
 
 public class AgentDemo {
 
 	public static void main(String[] args) {
-		 String host;
+                // Some config for the Main-container
+		String host;
 	        int port;
 	        String platform = null;     //default name
 	        boolean main = true;
-	 
 	        host = "localhost";
 	        port = -1;          //default-port 1099
 	 
@@ -25,22 +24,23 @@ public class AgentDemo {
 	        AgentContainer container = null;
 	 
 	        profile = new ProfileImpl(host, port, platform, main);
-	 
-	        //Container erzeugen
-	        container = (AgentContainer) runtime.createMainContainer(profile);
+                profile.setParameter(Profile.GUI, "true");
+                
+	        //Main-Container erzeugen
+	        container = runtime.createMainContainer(profile);
 	 
 	        // Agenten erzeugen und startet - oder aussteigen.
 	        try {
-	            AgentController agent1 = ((ContainerController) container).createNewAgent(
-	                        "Agent 5",
+	            AgentController testAgent = container.createNewAgent(
+	                        "testAgent",
 	                        TestAgent.class.getName(),
 	                        args);
-	                        agent1.start();
-//	                        AgentController agent2 = ((ContainerController) container).createNewAgent(
-//	    	                        "RobotAgent 1",
-//	    	                        RobotAgent.class.getName(),
-//	    	                        args);
-//	    	                        agent2.start();
+                    AgentController robotAgent = container.createNewAgent(
+	                        "robot",
+	                        RobotAgent.class.getName(),
+	                        args);
+	            testAgent.start();
+                    robotAgent.start();
 	        } catch(StaleProxyException e) {
 	            throw new RuntimeException(e);
 	        }

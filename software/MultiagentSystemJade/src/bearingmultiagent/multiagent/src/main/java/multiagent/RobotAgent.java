@@ -6,6 +6,6 @@ public class RobotAgent extends Agent{
 
 	protected void setup()
 	{
-		System.out.println("TestAgent: " + getAID().getName() + "ready");
+		System.out.println("RobotAgent: " + getAID().getName() + "ready");
 	}
 }

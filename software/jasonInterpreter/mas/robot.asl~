@@ -1,0 +1,19 @@
+// Agent robot in project mas.mas2j
+
+/* Initial beliefs and rules */
+envSizeT(X,Y) :- envSize(X,Y).
+
+/* Initial goals */
+
+!start.
+
+/* Plans */
+
++!start : true 
+	<- .print("hello world.");
+		!move.
+		
++!move : pos(r1, X, Y) & X<10 <- moveRight;
+		!move.
+
++!move <- .print("Finish moving").

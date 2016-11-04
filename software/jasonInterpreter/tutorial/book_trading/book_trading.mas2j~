@@ -1,0 +1,9 @@
+/* Jason Project */
+
+MAS book_trading {
+
+    infrastructure: Jade
+
+    agents:
+}
+
