@@ -6,12 +6,18 @@ import jason.environment.grid.GridWorldModel;
 import jason.environment.grid.GridWorldView;
 import jason.environment.grid.Location;
 import java.util.logging.*;
+import java.util.*;
 
 import java.awt.Color;                                                                                        
 import java.awt.Font;                                                                                         
 import java.awt.Graphics;                                                                                     
 import java.util.Random;                                                                                      
 import java.util.logging.Logger;  
+import javax.swing.*;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class BearingFactory extends Environment {
 
@@ -40,13 +46,22 @@ public class BearingFactory extends Environment {
 	public static final Literal dropBearingBox = Literal.parseLiteral("dropBearingBox");
 	public static final Literal dropForceFittedBearingBox = Literal.parseLiteral("dropForceFittedBearingBox");
 	public static final Literal dropAssemblyAidTray = Literal.parseLiteral("dropAssemblyAidTray");
+	public static final Literal finishBearingBox = Literal.parseLiteral("finishBearingBox");
+	public static final Literal finishForceFittedBearingBox = Literal.parseLiteral("finishForceFittedBearingBox");
 	public static final Literal envSize = Literal.parseLiteral("envSize");
+	
+	//Order storage
+	List<String> openOrders = new ArrayList<String>();
 	
 	private BearingFactoryModel model;
 	private BearingFactoryView view;
 	
     private Logger logger = Logger.getLogger("mas.mas2j."+BearingFactory.class.getName());
 
+	JFrame f;
+	JButton btn_1;
+	JButton btn_2;
+	
     /** Called before the MAS execution with the args informed in .mas2j */
     @Override
     public void init(String[] args) {
@@ -66,6 +81,27 @@ public class BearingFactory extends Environment {
 		Literal deliveryBoxPos = Literal.parseLiteral("pos(deliveryBox, "+deliveryBoxLoc.x+","+deliveryBoxLoc.y+")");
 		addPercept(deliveryBoxPos);
 		updatePercepts();
+		
+		btn_1 = new JButton("Bearing Box");
+		btn_1.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				btnBearingBoxHandler();
+            }
+		});
+		
+		btn_2 = new JButton("Force fitted bearing box");
+		btn_2.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				btnForceFittedBearingBoxHandler();
+            }
+		});
+		
+		f = new JFrame("Place your orders");
+        f.getContentPane().setLayout(new BorderLayout());
+        f.getContentPane().add(BorderLayout.SOUTH, btn_1);
+		f.getContentPane().add(BorderLayout.NORTH, btn_2);
+        f.pack();
+        f.setVisible(true);
     }
 
     @Override
@@ -86,6 +122,10 @@ public class BearingFactory extends Environment {
 				logger.info("drop force fitted bearing box");
 			} else if(action.equals(dropAssemblyAidTray)) {
 				logger.info("drop assembly aid tray");
+			} else if(action.equals(finishBearingBox)) {
+				removePercept(Literal.parseLiteral("order(bearingBox)"));
+			} else if(action.equals(finishForceFittedBearingBox)) {
+				removePercept(Literal.parseLiteral("order(forceFittedBearingBox)"));
 			} else {
 				logger.info("action not defined");
 			}
@@ -110,8 +150,23 @@ public class BearingFactory extends Environment {
 		Location loc1 = model.getAgPos(0);
 		Literal pos1 = Literal.parseLiteral("pos(r1,"+loc1.x+","+loc1.y+")");
 		addPercept("robot", pos1);
+		//Update order queue
+	}
+	
+	private void btnBearingBoxHandler(){
+		logger.info("add order");
+		openOrders.add("bearingBox");
+		Literal order = Literal.parseLiteral("order(bearingBox)");
+		addPercept(order);
 	}
 
+	private void btnForceFittedBearingBoxHandler(){
+		logger.info("add order");
+		openOrders.add("forceFittedBearingBox");
+		Literal order = Literal.parseLiteral("order(forceFittedBearingBox)");
+		addPercept(order);
+	}
+	
     /** Called before the end of MAS execution */
     @Override
     public void stop() {

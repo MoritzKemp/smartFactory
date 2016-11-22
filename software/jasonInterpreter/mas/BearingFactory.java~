@@ -6,12 +6,18 @@ import jason.environment.grid.GridWorldModel;
 import jason.environment.grid.GridWorldView;
 import jason.environment.grid.Location;
 import java.util.logging.*;
+import java.util.*;
 
 import java.awt.Color;                                                                                        
 import java.awt.Font;                                                                                         
 import java.awt.Graphics;                                                                                     
 import java.util.Random;                                                                                      
 import java.util.logging.Logger;  
+import javax.swing.*;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class BearingFactory extends Environment {
 
@@ -38,13 +44,21 @@ public class BearingFactory extends Environment {
 	public static final Literal moveNorth = Literal.parseLiteral("moveNorth");
 	public static final Literal moveWest = Literal.parseLiteral("moveWest");
 	public static final Literal dropBearingBox = Literal.parseLiteral("dropBearingBox");
+	public static final Literal dropForceFittedBearingBox = Literal.parseLiteral("dropForceFittedBearingBox");
+	public static final Literal dropAssemblyAidTray = Literal.parseLiteral("dropAssemblyAidTray");
 	public static final Literal envSize = Literal.parseLiteral("envSize");
+	
+	//Order storage
+	List<String> openOrders = new ArrayList<String>();
 	
 	private BearingFactoryModel model;
 	private BearingFactoryView view;
 	
     private Logger logger = Logger.getLogger("mas.mas2j."+BearingFactory.class.getName());
 
+	JFrame f;
+	JButton btn;
+	
     /** Called before the MAS execution with the args informed in .mas2j */
     @Override
     public void init(String[] args) {
@@ -60,10 +74,24 @@ public class BearingFactory extends Environment {
 		Literal aidTrayPos = Literal.parseLiteral("pos(aidTray, "+aidTrayLoc.x+","+aidTrayLoc.y+")");
 		addPercept(aidTrayPos);
 		Literal forceFittingPos = Literal.parseLiteral("pos(forceFitting, "+forceFittingLoc.x+","+forceFittingLoc.y+")");
-		addPercept(aidTrayPos);
+		addPercept(forceFittingPos);
 		Literal deliveryBoxPos = Literal.parseLiteral("pos(deliveryBox, "+deliveryBoxLoc.x+","+deliveryBoxLoc.y+")");
 		addPercept(deliveryBoxPos);
 		updatePercepts();
+		
+		btn = new JButton("Place new order");
+		btn.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				btnBearingBoxHandler();
+                logger.info("Button pressed");
+            }
+		});
+		
+		f = new JFrame("Auctioneer agent");
+        f.getContentPane().setLayout(new BorderLayout());
+        f.getContentPane().add(BorderLayout.SOUTH, btn);
+        f.pack();
+        f.setVisible(true);
     }
 
     @Override
@@ -80,6 +108,12 @@ public class BearingFactory extends Environment {
 				model.moveWest();
 			} else if(action.equals(dropBearingBox)) {
 				logger.info("drop bearing box");
+			} else if(action.equals(dropForceFittedBearingBox)) {
+				logger.info("drop force fitted bearing box");
+			} else if(action.equals(dropAssemblyAidTray)) {
+				logger.info("drop assembly aid tray");
+			} else {
+				logger.info("action not defined");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -87,7 +121,7 @@ public class BearingFactory extends Environment {
 		informAgsEnvironmentChanged();
 		
 		try {                                                                                                 
-            Thread.sleep(1000);                                                                                
+            Thread.sleep(500);                                                                                
         } catch (Exception e) {}  
 		
 		updatePercepts();
@@ -102,6 +136,15 @@ public class BearingFactory extends Environment {
 		Location loc1 = model.getAgPos(0);
 		Literal pos1 = Literal.parseLiteral("pos(r1,"+loc1.x+","+loc1.y+")");
 		addPercept("robot", pos1);
+		//Update order queue
+		if(!openOrders.isEmpty()){
+			Literal order = Literal.parseLiteral("order("+openOrders.iterator().next()+")");
+			addPercept("robot", order);
+		}
+	}
+	
+	private void btnBearingBoxHandler(){
+		openOrders.add("bearingBox");
 	}
 
     /** Called before the end of MAS execution */

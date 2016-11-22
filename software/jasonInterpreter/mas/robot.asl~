@@ -8,13 +8,22 @@ free. 				//initially the robot is free and capable to do a job
 
 /* Initial goals */
 
-!start.
+!idle.
 
 /* Plans */
 
-+!start : true
-	<- 	.print("hello world.");
-		!deliveredBearingBox.
+/**** Waiting loop plans ***/
++!idle : not order(bearingBox) & not order(forceFittedBearingBox)
+	<- 	.print("waiting for orders... *dum-di-dum*");
+		!idle.
++!idle : order(bearingBox)
+	<- .print("as you wish. Processing order to deliver bearing box");
+		!deliveredBearingBox;
+		!idle.
++!idle : order(forceFittedBearingBox)
+	<-	print("as you wish. Processing order to deliver force fitted bearing box");
+		!deliveredForceFittedBearingBox;
+		!idle.
 
 /**** Plans for orders ****/
 +!deliveredBearingBox : free
@@ -27,8 +36,9 @@ free. 				//initially the robot is free and capable to do a job
 +!deliveredBearingBox : not free
 	<- 	.print("Not free, assume that anybody else will handle this").
 
-+!deliverForceFittedBearingBox : free
-	<-	!atStock;
++!deliveredForceFittedBearingBox : free
+	<-	-free;
+		!atStock;
 		!haveBearingBox;
 		!haveAxle;
 		!atAssemblyAidTray;
@@ -36,11 +46,10 @@ free. 				//initially the robot is free and capable to do a job
 		!atForceFittingMachine;
 		!haveForceFittedBearingBox;
 		!atDeliveryBox;
-		!droppedBearingBox;
-		dropBearingBox;
+		!droppedForceFittedBearingBox;
 		!returnedAsseblyAidTray;
 		+free.
-+!deliverForceFittedBearingBox : not free
++!deliveredForceFittedBearingBox : not free
 	<-	.print("Not free, assume that anybody else will handle this").
 	
 +!atStock : pos(stock, X, Y) & pos(r1, A, B) & (not X = A | not Y = B)
@@ -51,34 +60,45 @@ free. 				//initially the robot is free and capable to do a job
 	<- 	+bearingBox;
 		.print("have bearing box").
 
-+!haveAxle:	not axle
++!haveAxle : not axle
 	<-	+axle;
 		.print("have axle").
 		
-+!atAssemblyAidTray: pos(aidTray, X, Y) & pos(r1, A, B) & (not X = A | Y = B)
++!atAssemblyAidTray : pos(aidTray, X, Y) & pos(r1, A, B) & (not X = A | Y = B)
 	<- 	!at(X,Y);
 		.print("arrive at assembly aid tray").
 
-+!haveAssemblyAidTray: not assemblyAidTray
++!haveAssemblyAidTray : not assemblyAidTray
 	<-	+assemblyAidTray;
 		.print("have assembly aid tray").
+
++!atForceFittingMachine : pos(forceFitting, X, Y) & pos(r1, A, B) & (not X = A | Y = B)
+	<-	!at(X,Y);
+		.print("arrive at force fitting machine").
 		
-+!haveForceFittedBearingBox: not forceFittedBearingBox
++!haveForceFittedBearingBox : not forceFittedBearingBox
 	<- 	-bearingBox;
 		-axle;
 		+forceFittedBearingBox;
 		.print("have force fitted bearing box").
 		
-!returnedAsseblyAidTray: assemblyAidTray
++!returnedAsseblyAidTray: assemblyAidTray
+	<-	!atAssemblyAidTray;
+		dropAssemblyAidTray;
+		-assemblyAidTray.
 		
-+!atDeliveryBox : pos(deliveryBox, X, Y) & pos(r1, A, B) & (not X = A | not Y = A)
++!atDeliveryBox : pos(deliveryBox, X, Y) & pos(r1, A, B) & (not X = A | not Y = B)
 	<- 	!at(X,Y);
 		.print("arrive at delivery box").
 
-+!droppedBearingBox : bearingBox & (pos(deliveryBox, X, Y) & pos(r1, A, B) & ( X = A & Y = A))
++!droppedBearingBox : bearingBox & (pos(deliveryBox, X, Y) & pos(r1, A, B) & ( X = A & Y = B))
 	<- 	dropBearingBox;
 		-bearingBox.
 
++!droppedForceFittedBearingBox : forceFittedBearingBox & (pos(deliveryBox, X, Y) & pos(r1, A, B) & ( X = A & Y = B))
+	<-	dropForceFittedBearingBox;
+		-forceFittedBearingBox.
+		
 /***** Basic movement plans *****/
 +!at(X, Y) : pos(r1, A, B) & not (X=A & Y=B)
 	<- 	!atEast(X);
