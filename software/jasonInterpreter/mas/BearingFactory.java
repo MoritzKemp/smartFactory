@@ -38,6 +38,8 @@ public class BearingFactory extends Environment {
 	public static final Literal moveNorth = Literal.parseLiteral("moveNorth");
 	public static final Literal moveWest = Literal.parseLiteral("moveWest");
 	public static final Literal dropBearingBox = Literal.parseLiteral("dropBearingBox");
+	public static final Literal dropForceFittedBearingBox = Literal.parseLiteral("dropForceFittedBearingBox");
+	public static final Literal dropAssemblyAidTray = Literal.parseLiteral("dropAssemblyAidTray");
 	public static final Literal envSize = Literal.parseLiteral("envSize");
 	
 	private BearingFactoryModel model;
@@ -60,7 +62,7 @@ public class BearingFactory extends Environment {
 		Literal aidTrayPos = Literal.parseLiteral("pos(aidTray, "+aidTrayLoc.x+","+aidTrayLoc.y+")");
 		addPercept(aidTrayPos);
 		Literal forceFittingPos = Literal.parseLiteral("pos(forceFitting, "+forceFittingLoc.x+","+forceFittingLoc.y+")");
-		addPercept(aidTrayPos);
+		addPercept(forceFittingPos);
 		Literal deliveryBoxPos = Literal.parseLiteral("pos(deliveryBox, "+deliveryBoxLoc.x+","+deliveryBoxLoc.y+")");
 		addPercept(deliveryBoxPos);
 		updatePercepts();
@@ -80,6 +82,12 @@ public class BearingFactory extends Environment {
 				model.moveWest();
 			} else if(action.equals(dropBearingBox)) {
 				logger.info("drop bearing box");
+			} else if(action.equals(dropForceFittedBearingBox)) {
+				logger.info("drop force fitted bearing box");
+			} else if(action.equals(dropAssemblyAidTray)) {
+				logger.info("drop assembly aid tray");
+			} else {
+				logger.info("action not defined");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -87,7 +95,7 @@ public class BearingFactory extends Environment {
 		informAgsEnvironmentChanged();
 		
 		try {                                                                                                 
-            Thread.sleep(1000);                                                                                
+            Thread.sleep(500);                                                                                
         } catch (Exception e) {}  
 		
 		updatePercepts();

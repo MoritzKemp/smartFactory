@@ -15,34 +15,71 @@ free. 				//initially the robot is free and capable to do a job
 +!start : true
 	<- 	.print("hello world.");
 		!deliveredBearingBox.
-		
-+!move : pos(r1, X, Y) & X<10 
-	<- 	moveRight;
-		!move.
 
-+!move <- .print("Finish moving").
-
+/**** Plans for orders ****/
 +!deliveredBearingBox : free
 	<-	-free;
 		!atStock;
 		!haveBearingBox;
 		!atDeliveryBox;
-		dropBearingBox;
+		!droppedBearingBox;
 		+free.
-
-+!deliveredBearingBox: not free
++!deliveredBearingBox : not free
 	<- 	.print("Not free, assume that anybody else will handle this").
-	
-+!atStock : pos(stock, X, Y) & pos(r1, A, B) & (not X = A | not Y = A)
-	<-	!at(X, Y);
-		.print("arrive at stock plan").
-	
-+!haveBearingBox 
-	<- .print("have bearing box plan").
-	
-+!atDeliveryBox
-	<- .print("arrive at delivery box plan").
 
++!deliverForceFittedBearingBox : free
+	<-	!atStock;
+		!haveBearingBox;
+		!haveAxle;
+		!atAssemblyAidTray;
+		!haveAssemblyAidTray;
+		!atForceFittingMachine;
+		!haveForceFittedBearingBox;
+		!atDeliveryBox;
+		!droppedBearingBox;
+		dropBearingBox;
+		!returnedAsseblyAidTray;
+		+free.
++!deliverForceFittedBearingBox : not free
+	<-	.print("Not free, assume that anybody else will handle this").
+	
++!atStock : pos(stock, X, Y) & pos(r1, A, B) & (not X = A | not Y = B)
+	<-	!at(X, Y);
+		.print("arrive at stock").
+	
++!haveBearingBox : not bearingBox
+	<- 	+bearingBox;
+		.print("have bearing box").
+
++!haveAxle:	not axle
+	<-	+axle;
+		.print("have axle").
+		
++!atAssemblyAidTray: pos(aidTray, X, Y) & pos(r1, A, B) & (not X = A | Y = B)
+	<- 	!at(X,Y);
+		.print("arrive at assembly aid tray").
+
++!haveAssemblyAidTray: not assemblyAidTray
+	<-	+assemblyAidTray;
+		.print("have assembly aid tray").
+		
++!haveForceFittedBearingBox: not forceFittedBearingBox
+	<- 	-bearingBox;
+		-axle;
+		+forceFittedBearingBox;
+		.print("have force fitted bearing box").
+		
+!returnedAsseblyAidTray: assemblyAidTray
+		
++!atDeliveryBox : pos(deliveryBox, X, Y) & pos(r1, A, B) & (not X = A | not Y = A)
+	<- 	!at(X,Y);
+		.print("arrive at delivery box").
+
++!droppedBearingBox : bearingBox & (pos(deliveryBox, X, Y) & pos(r1, A, B) & ( X = A & Y = A))
+	<- 	dropBearingBox;
+		-bearingBox.
+
+/***** Basic movement plans *****/
 +!at(X, Y) : pos(r1, A, B) & not (X=A & Y=B)
 	<- 	!atEast(X);
 		!atWest(X);
@@ -62,8 +99,7 @@ free. 				//initially the robot is free and capable to do a job
 
 +!atEast(X) : pos(r1, A, B) & A < X
 	<- 	moveEast;
-		!atEast(X).
-		
+		!atEast(X).	
 +!atEast(X) <- .print("finish moving east").
 
 +!atSouth(Y) : pos(r1, A, B) & B < Y
