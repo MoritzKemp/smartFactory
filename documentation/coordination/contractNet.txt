@@ -1,0 +1,26 @@
+@startuml
+[-> robot_leader : order
+== Announcement & Bidding ==
+robot_leader -> robot_42 : annoucement of goal
+
+alt couldn't achieve goal
+	robot_42 -> robot_leader : refuse
+else surely could achieve goal
+	robot_42 -> robot_leader : bid
+end
+
+== Award ==
+alt reject bid
+	robot_leader -> robot_42 : reject
+else accept bid
+	robot_leader -> robot_42 : award
+end
+
+== Expediting ==
+alt failed to achive goal
+	robot_42 -> robot_leader : failure
+else successful accomplished
+	robot_42 -> robot_leader : inform_done
+end
+
+@enduml

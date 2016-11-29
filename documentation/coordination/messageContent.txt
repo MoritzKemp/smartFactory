@@ -1,0 +1,72 @@
+*****************************************
+****** Message types and content ********
+*****************************************
+
+** Announcement of goal
+----------------------------+
+  Header          | Value   |
+----------------------------+
+To:                all
+From:              manager
+Contract:          unique id
+Type:	           ANC
+Eligibility:       constraints on goal
+Goal:              goal's name
+Bid Spec:          information needed about bidder
+Exp Date:          goal achievement deadline
+
+
+** Bid
+----------------------------+
+  Header          | Value   |
+----------------------------+
+To:                manager
+From:              bidder
+Contract:          unique id
+Type:	           BID
+Bid Spec:          requested information about the bidder
+
+** Refuse
+----------------------------+
+  Header          | Value   |
+----------------------------+
+To:                manager
+From:              bidder
+Contract:          unique id
+Type:	           REF
+
+** Reject
+----------------------------+
+  Header          | Value   |
+----------------------------+
+To:                bidder
+From:              manager
+Contract:          unique id
+Type:	           REJ
+
+** Award
+----------------------------+
+  Header          | Value   |
+----------------------------+
+To:                contractor
+From:              manager
+Contract:          unique id
+Type:	           AWR
+
+** Expediting success
+----------------------------+
+  Header          | Value   |
+----------------------------+
+To:                manager
+From:              contractor
+Contract:          unique id
+Type:	           SUCC
+
+** Expediting failure
+----------------------------+
+  Header          | Value   |
+----------------------------+
+To:                manager
+From:              bidder
+Contract:          unique id
+Type:	           FAI
