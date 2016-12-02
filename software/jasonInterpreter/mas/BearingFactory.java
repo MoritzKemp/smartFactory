@@ -24,7 +24,7 @@ public class BearingFactory extends Environment {
 	//Environment specs 
 	public static final int grid_height = 20;
 	public static final int grid_width = 20;
-	public static final int nAg = 1;
+	public static final int nAg = 3;
 	
 	//Graphical key of static objects
 	public static final int stock = 8;
@@ -49,6 +49,7 @@ public class BearingFactory extends Environment {
 	public static final Literal finishBearingBox = Literal.parseLiteral("finishBearingBox");
 	public static final Literal finishForceFittedBearingBox = Literal.parseLiteral("finishForceFittedBearingBox");
 	public static final Literal envSize = Literal.parseLiteral("envSize");
+	public static final Literal determineChairman = Literal.parseLiteral("determineChairmanById");
 	
 	//Order storage
 	List<String> openOrders = new ArrayList<String>();
@@ -80,6 +81,10 @@ public class BearingFactory extends Environment {
 		addPercept(forceFittingPos);
 		Literal deliveryBoxPos = Literal.parseLiteral("pos(deliveryBox, "+deliveryBoxLoc.x+","+deliveryBoxLoc.y+")");
 		addPercept(deliveryBoxPos);
+                Literal otherRobots = Literal.parseLiteral("robots([0, 1, 2])");
+		addPercept(otherRobots);
+                
+                
 		updatePercepts();
 		
 		btn_1 = new JButton("Bearing Box");
@@ -106,16 +111,19 @@ public class BearingFactory extends Environment {
 
     @Override
     public boolean executeAction(String agName, Structure action) {
+		
+		int id = Integer.parseInt(agName.substring(5))-1;
+		
 		try {
 			
 			if(action.equals(moveEast)) {
-				model.moveEast();
+				model.moveEast(id);
 			} else if(action.equals(moveSouth)) {
-				model.moveSouth();
+				model.moveSouth(id);
 			} else if(action.equals(moveNorth)) {
-				model.moveNorth();
+				model.moveNorth(id);
 			} else if(action.equals(moveWest)) {
-				model.moveWest();
+				model.moveWest(id);
 			} else if(action.equals(dropBearingBox)) {
 				logger.info("drop bearing box");
 			} else if(action.equals(dropForceFittedBearingBox)) {
@@ -126,7 +134,9 @@ public class BearingFactory extends Environment {
 				removePercept(Literal.parseLiteral("order(bearingBox)"));
 			} else if(action.equals(finishForceFittedBearingBox)) {
 				removePercept(Literal.parseLiteral("order(forceFittedBearingBox)"));
-			} else {
+			} else if(action.equals(determineChairman)) {
+				determineChairman(agName, id);
+			} else{
 				logger.info("action not defined");
 			}
 		} catch (Exception e) {
@@ -145,12 +155,18 @@ public class BearingFactory extends Environment {
 	
 	// Update agent locations
 	public void updatePercepts(){
-		clearPercepts("robot");
-		//Update agent locations
-		Location loc1 = model.getAgPos(0);
-		Literal pos1 = Literal.parseLiteral("pos(r1,"+loc1.x+","+loc1.y+")");
-		addPercept("robot", pos1);
-		//Update order queue
+		int i;
+		for(i=0; i<nAg; i++){
+			clearPercepts("robot" + (i+1));
+			
+			//Update agent locations
+			Location loc1 = model.getAgPos(i);
+			Literal pos1 = Literal.parseLiteral("pos(my,"+loc1.x+","+loc1.y+")");
+			addPercept("robot"+(i+1), pos1);
+                        
+			//Add own id percerpt
+			addPercept("robot"+(i+1), Literal.parseLiteral("id("+ i +")"));
+		}
 	}
 	
 	private void btnBearingBoxHandler(){
@@ -165,6 +181,24 @@ public class BearingFactory extends Environment {
 		openOrders.add("forceFittedBearingBox");
 		Literal order = Literal.parseLiteral("order(forceFittedBearingBox)");
 		addPercept(order);
+	}
+	
+	private void determineChairman(String agName, int id){
+		List<Literal> otherAgents = consultPercepts(agName);
+		Literal tmp;
+		Iterator<Literal> it = otherAgents.iterator();
+		while(it.hasNext()){
+                    tmp = it.next();
+                    if(tmp.getFunctor().equals("robots")){
+                        ListTerm listTerms = (ListTerm)tmp.getTerm(0);
+                        List<Term> listOfTerms = listTerms.getAsList();
+                        Collections.sort(listOfTerms);
+                        if(listOfTerms.get(0).toString().equals(Integer.toString(id))){
+                            addPercept(Literal.parseLiteral("chairman("+listOfTerms.get(0)+")"));
+                        }
+                    }
+		}
+		
 	}
 	
     /** Called before the end of MAS execution */
@@ -182,31 +216,34 @@ public class BearingFactory extends Environment {
 			add(assembly_aid_tray, aidTrayLoc);
 			add(force_fitting_machine, forceFittingLoc);
 			add(delivery_box, deliveryBoxLoc);
-			setAgPos(0,10,10);
+			int i;
+			for(i=0; i<nAg; i++){
+				setAgPos(i,10+i,10+i);
+			}
 		}
 		
-		public void moveEast()  throws Exception{
-			Location loc_1 = getAgPos(0);
+		public void moveEast(int id)  throws Exception{
+			Location loc_1 = getAgPos(id);
 			loc_1.x++;
-			setAgPos(0, loc_1);
+			setAgPos(id, loc_1);
 		}
 		
-		public void moveSouth()  throws Exception{
-			Location loc_1 = getAgPos(0);
+		public void moveSouth(int id)  throws Exception{
+			Location loc_1 = getAgPos(id);
 			loc_1.y++;
-			setAgPos(0, loc_1);
+			setAgPos(id, loc_1);
 		}
 		
-		public void moveNorth()  throws Exception{
-			Location loc_1 = getAgPos(0);
+		public void moveNorth(int id)  throws Exception{
+			Location loc_1 = getAgPos(id);
 			loc_1.y--;
-			setAgPos(0, loc_1);
+			setAgPos(id, loc_1);
 		}
 		
-		public void moveWest()  throws Exception{
-			Location loc_1 = getAgPos(0);
+		public void moveWest(int id)  throws Exception{
+			Location loc_1 = getAgPos(id);
 			loc_1.x--;
-			setAgPos(0, loc_1);
+			setAgPos(id, loc_1);
 		}
 	}
 	

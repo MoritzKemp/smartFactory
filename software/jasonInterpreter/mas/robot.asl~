@@ -13,9 +13,6 @@ free. 				//initially the robot is free and capable to do a job
 /* Plans */
 
 /**** Waiting loop plans ***/
-+!idle : not order(bearingBox) & not order(forceFittedBearingBox)
-	<- 	.print("waiting for orders... *dum-di-dum*");
-		!idle.
 +!idle : order(bearingBox)
 	<- .print("as you wish. Processing order to deliver bearing box");
 		!deliveredBearingBox;
@@ -24,6 +21,7 @@ free. 				//initially the robot is free and capable to do a job
 	<-	print("as you wish. Processing order to deliver force fitted bearing box");
 		!deliveredForceFittedBearingBox;
 		!idle.
++!idle <- .wait(1000); !idle.
 
 /**** Plans for orders ****/
 +!deliveredBearingBox : free
@@ -32,6 +30,7 @@ free. 				//initially the robot is free and capable to do a job
 		!haveBearingBox;
 		!atDeliveryBox;
 		!droppedBearingBox;
+		finishBearingBox;
 		+free.
 +!deliveredBearingBox : not free
 	<- 	.print("Not free, assume that anybody else will handle this").
@@ -48,6 +47,7 @@ free. 				//initially the robot is free and capable to do a job
 		!atDeliveryBox;
 		!droppedForceFittedBearingBox;
 		!returnedAsseblyAidTray;
+		finishForceFittedBearingBox;
 		+free.
 +!deliveredForceFittedBearingBox : not free
 	<-	.print("Not free, assume that anybody else will handle this").

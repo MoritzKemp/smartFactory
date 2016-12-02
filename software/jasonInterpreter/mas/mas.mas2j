@@ -7,7 +7,7 @@ MAS mas {
     environment: BearingFactory(gui)
 
     agents:
-        robot[mindinspector="gui(cycle,html,history)"];
+        robot[mindinspector="gui(cycle,html)"] #3;
 
 }
 
