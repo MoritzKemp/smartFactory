@@ -5,7 +5,12 @@
 
 /* Initial beliefs and rules */
 free. 				//initially the robot is free and capable to do a job
-
+votingNecessary 
+	:- 	not leader(X) & 
+		id(Y) & 
+		chairman(Z) & 
+		(Y = Z).
+		
 /* Initial goals */
 
 !idle.
@@ -14,8 +19,10 @@ free. 				//initially the robot is free and capable to do a job
 
 /**** Waiting loop plans ***/
 
-+!idle : not chairman(X)
-	<-	determineChairmanById;
++!idle : not chairman(X) & robots(X)  
+	<-	//determineChairmanById;
+		.min(X, CHAIR);
+		+chairman(CHAIR);
 		!leader;
 		!idle.
 +!idle : order(bearingBox)
@@ -106,33 +113,52 @@ free. 				//initially the robot is free and capable to do a job
 
 		
 /***** Coordination plans *****/
-+!leader : not leader(X) & id(Y) & chairman(Z) & (Y = Z)
-	<- .broadcast(achieve, vote);
++!leader : votingNecessary
+	<- 	.broadcast(achieve, vote);
 		!vote;
-		.count((vote(_,0)),N);
-		.print(N);
-		.count((vote(_,1)),M);
-		.print(M);
-		.count((vote(_,2)),V);
-		.print(V).
-
+		.wait(2000); //wait for other agents to cast their vote
+		!countedVote.
++!leader : not leader(_) & chairman(X) & id(Y) & not (X = Y)
+	<- .print("I'am not the chairman.").
++!leader : leader(_)
+	<- .print("Elected leader exists.").
+		
 +!vote : chairman(Z) & id(E)
-	<- 	.print("attempting to vote");
+	<- 	.print("Attempting to vote");
 		.random(C);
 		.print(C);
 		if(C <= 0.3){
 		.concat("robot", Z+1, R);
 		.send(R, tell, vote(E, 0));
+		.print("Voted for robot1");
 		}
 		if(C>0.3 & C<=0.6){ 
 		.concat("robot", Z+1, R);
 		.send(R, tell, vote(E, 1));
+		.print("Voted for robot2");
 		};
 		if(C>0.6){ 
 		.concat("robot", Z+1, R);
 		.send(R, tell, vote(E, 2));
+		.print("Voted for robot3");
 		}.
-		
+
++!countedVote : not leader(_) & 
+				.count((vote(_,0)),C0) &
+				.count((vote(_,1)),C1) &
+				.count((vote(_,2)),C2)
+	<-	if(C0 >=2){ !namedLeader(0)};
+		if(C1 >=2){ !namedLeader(1)};
+		if(C2 >=2){ !namedLeader(2)};
+		.abolish(vote(_,_)); //remove vote data 
+		!leader. //if no majority, re-do
+
++!namedLeader(ID) 
+	<-	+leader(ID);
+		.broadcast(tell, leader(ID));
+		.concat("Elected leader is robot ", ID+1, X);
+		.print(X).
+
 /***** Basic movement plans *****/
 +!at(X, Y) : pos(my, A, B) & not (X=A & Y=B)
 	<- 	!atEast(X);
