@@ -29,16 +29,12 @@ robotName(Name, Id) :- .concat("robot", Id+1, Name).
 		?leader(LEADER);
 		informAboutLeader(LEADER+1);
 		!idle.
-+!idle : order(deliveredBearingBox,ID,false)[source(customer)] | order(deliveredBearingBox,ID,false)[source(customer),source(percept)]
-	<- .print("as you wish. Processing order to deliver bearing box");
-		!delegateOrder(deliveredBearingBox);
-		-order(deliveredBearingBox,ID,false)[source(customer),source(percept)];
-		-order(deliveredBearingBox,ID,false)[source(customer)];
-		+order(deliveredBearingBox,ID,true)[source(customer)];
-		!idle.
-+!idle : order(forceFittedBearingBox)[source(customer)]
-	<-	print("as you wish. Processing order to deliver force fitted bearing box");
-		!delegateOrder(forceFittedBearingBox);
++!idle : order(Order,ID,false)[source(customer)] | order(Order,ID,false)[source(customer),source(percept)]
+	<- .print("Delegate order ",Order);
+		!delegateOrder(Order);
+		-order(Order,ID,false)[source(customer),source(percept)];
+		-order(Order,ID,false)[source(customer)];
+		+order(Order,ID,true)[source(customer)];
 		!idle.
 +!idle <- .wait(1000); !idle.
 
@@ -56,7 +52,7 @@ robotName(Name, Id) :- .concat("robot", Id+1, Name).
 +!deliveredBearingBox : not free
 	<- 	.print("Not free, assume that anybody else will handle this").
 
-+!deliveredForceFittedBearingBox : free
++!deliveredForceFittedBearingBox : free & leader(Leader) & robotName(N, Leader)
 	<-	-free;
 		!atStock;
 		!haveBearingBox;
@@ -69,6 +65,7 @@ robotName(Name, Id) :- .concat("robot", Id+1, Name).
 		!droppedForceFittedBearingBox;
 		!returnedAsseblyAidTray;
 		finishForceFittedBearingBox;
+		.send(N, tell, finishOrder(deliveredForceFittedBearingBox));
 		+free.
 +!deliveredForceFittedBearingBox : not free
 	<-	.print("Not free, assume that anybody else will handle this").
@@ -163,7 +160,7 @@ robotName(Name, Id) :- .concat("robot", Id+1, Name).
 		.max(L, offer(V,P));
 		!announce(Order, L, P).
 +!awardedRobot(Order) : not proposal(_,_)
-	<- .print("Do myself.");
+	<- .print("No proposals. Do it myself.");
 		!Order.
 		
 +!announce(_,[],_) .

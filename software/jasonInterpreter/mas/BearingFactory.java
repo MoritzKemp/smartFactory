@@ -186,8 +186,9 @@ public class BearingFactory extends Environment {
 	private void btnForceFittedBearingBoxHandler(){
 		logger.info("add order");
 		openOrders.add("forceFittedBearingBox");
-		Literal order = Literal.parseLiteral("order(forceFittedBearingBox)");
-		addPercept(this.leaderId,order);
+                this.uuid++;
+		Literal order = Literal.parseLiteral("order(deliveredForceFittedBearingBox, "+this.uuid+ ", false)[source(customer)]");
+		addPercept(this.leaderId, order);
 	}
 	
 	private void determineChairman(String agName, int id){
