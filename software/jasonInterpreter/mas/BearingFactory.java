@@ -141,7 +141,6 @@ public class BearingFactory extends Environment {
 			} else if(action.getFunctor().equals("informAboutLeader")) {
 				this.leaderId = action.getTerm(0).toString();
                                 this.leaderId = "robot"+this.leaderId;
-                                System.out.println(this.leaderId);
 			} else{
 				logger.info("action not defined");
 			}
@@ -181,7 +180,6 @@ public class BearingFactory extends Environment {
 		openOrders.add("bearingBox");
                 this.uuid++;
 		Literal order = Literal.parseLiteral("order(deliveredBearingBox, "+this.uuid+ ", false)[source(customer)]");
-		System.out.println(this.leaderId);
                 addPercept(this.leaderId, order);
 	}
 
