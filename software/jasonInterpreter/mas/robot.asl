@@ -5,6 +5,7 @@
 
 /* Initial beliefs and rules */
 free. 				//initially the robot is free and capable to do a job
+robotName(Name, Id) :- .concat("robot", Id+1, Name).
 
 /* Initial goals */
 
@@ -16,26 +17,80 @@ free. 				//initially the robot is free and capable to do a job
 
 +!idle : not chairman(X)
 	<-	determineChairmanById;
-		!leader;
 		!idle.
-+!idle : order(bearingBox)
++!idle : finishOrder(A)
+	<- 	.findall(b(Id, A), order(A, Id, true), L);
+		.min(L, b(NewId, A));	
+		.abolish(order(A, NewId, true));
+		.abolish(finishOrder(A));
+		!idle.
++!idle : chairman(X) & id(Y) & (X=Y) & not leader(_)
+	<-	!leader;
+		?leader(LEADER);
+		informAboutLeader(LEADER+1);
+		!idle.
++!idle : order(deliveredBearingBox,ID,false)[source(customer)] | order(deliveredBearingBox,ID,false)[source(customer),source(percept)]
 	<- .print("as you wish. Processing order to deliver bearing box");
-		!deliveredBearingBox;
+		!delegateOrder(deliveredBearingBox);
+		-order(deliveredBearingBox,ID,false)[source(customer),source(percept)];
+		-order(deliveredBearingBox,ID,false)[source(customer)];
+		+order(deliveredBearingBox,ID,true)[source(customer)];
 		!idle.
-+!idle : order(forceFittedBearingBox)
++!idle : order(forceFittedBearingBox)[source(customer)]
 	<-	print("as you wish. Processing order to deliver force fitted bearing box");
-		!deliveredForceFittedBearingBox;
+		!delegateOrder(forceFittedBearingBox);
 		!idle.
 +!idle <- .wait(1000); !idle.
 
 /**** Plans for orders ****/
-+!deliveredBearingBox : free
++!delegateOrder(Order) : true
+	<-	.broadcast(tell, orderAvailable(Order));
+		.print("Broadcast order proposal");
+		.wait(2000);
+		!awardedRobot(Order);
+		.abolish(proposal(_,_)).
+
++!awardedRobot(Order) : proposal(_,_)
+	<-	.findall(offer(Y,X), proposal(X,Y), L);
+		.max(L, offer(V,P));
+		!announce(Order, L, P).
+	
++!announce(_,[],_) .
+
++!announce(Order, [offer(_, WinAg)|T], WinAg) : robotName(WinName, WinAg)
+	<- .send(WinName, achieve, Order);
+		!announce(Order, T, WinAg).
+
++!announce(Order, [offer(_,LAg)|T], WinAg) : robotName(LName, LAg)
+	<-	.send(LName, tell, reject(Order));
+		!announce(Order, T, WinAg).
+		
+		
++!awardedRobot(Order) : not proposal(_,_)
+	<- .print("Do myself.");
+		!Order.
+
++orderAvailable(Order) : free & leader(Leader) & id(A) &robotName(LeaderName, Leader)
+	<- 	.random(C);
+		.send(LeaderName, tell, proposal(A, C));
+		.print("Send proposal with value ", C).
++orderAvailable(Order) : not free & leader(Leader) & id(A)
+	<- .send(LeaderName, tell, reject(A));
+		.print("Reject proposal").
+
+		
++reject(Order)
+	<- 	.print("Recieved a rejection.");
+		.abolish(reject(_)).
+
++!deliveredBearingBox : free & leader(Leader) & robotName(N, Leader)
 	<-	-free;
 		!atStock;
 		!haveBearingBox;
 		!atDeliveryBox;
 		!droppedBearingBox;
 		finishBearingBox;
+		.send(N, tell, finishOrder(deliveredBearingBox));
 		+free.
 +!deliveredBearingBox : not free
 	<- 	.print("Not free, assume that anybody else will handle this").
@@ -121,15 +176,12 @@ free. 				//initially the robot is free and capable to do a job
 	   .broadcast(tell,leader(W2));
 	   -+leader(W2); 
 	   };
-	   if(V > V2)
+	   if(V >= V2)
 	   {
 	   .broadcast(tell,leader(W));
 	   -+leader(W);
 	   };
 	   .abolish(bid(_,_)).
-	   
-
-+!bid(Z,f) : bid(Z,f). 
 	   
 +!bid : chairman(Z) & id(E)
 	<- 	.print("attempting to vote");

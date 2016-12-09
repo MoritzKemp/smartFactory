@@ -25,6 +25,8 @@ public class BearingFactory extends Environment {
 	public static final int grid_height = 20;
 	public static final int grid_width = 20;
 	public static final int nAg = 3;
+        public String leaderId;
+        public int uuid;
 	
 	//Graphical key of static objects
 	public static final int stock = 8;
@@ -50,7 +52,7 @@ public class BearingFactory extends Environment {
 	public static final Literal finishForceFittedBearingBox = Literal.parseLiteral("finishForceFittedBearingBox");
 	public static final Literal envSize = Literal.parseLiteral("envSize");
 	public static final Literal determineChairman = Literal.parseLiteral("determineChairmanById");
-	
+        
 	//Order storage
 	List<String> openOrders = new ArrayList<String>();
 	
@@ -136,6 +138,10 @@ public class BearingFactory extends Environment {
 				removePercept(Literal.parseLiteral("order(forceFittedBearingBox)"));
 			} else if(action.equals(determineChairman)) {
 				determineChairman(agName, id);
+			} else if(action.getFunctor().equals("informAboutLeader")) {
+				this.leaderId = action.getTerm(0).toString();
+                                this.leaderId = "robot"+this.leaderId;
+                                System.out.println(this.leaderId);
 			} else{
 				logger.info("action not defined");
 			}
@@ -168,19 +174,22 @@ public class BearingFactory extends Environment {
 			addPercept("robot"+(i+1), Literal.parseLiteral("id("+ i +")"));
 		}
 	}
+        
 	
 	private void btnBearingBoxHandler(){
 		logger.info("add order");
 		openOrders.add("bearingBox");
-		Literal order = Literal.parseLiteral("order(bearingBox)");
-		addPercept(order);
+                this.uuid++;
+		Literal order = Literal.parseLiteral("order(deliveredBearingBox, "+this.uuid+ ", false)[source(customer)]");
+		System.out.println(this.leaderId);
+                addPercept(this.leaderId, order);
 	}
 
 	private void btnForceFittedBearingBoxHandler(){
 		logger.info("add order");
 		openOrders.add("forceFittedBearingBox");
 		Literal order = Literal.parseLiteral("order(forceFittedBearingBox)");
-		addPercept(order);
+		addPercept(this.leaderId,order);
 	}
 	
 	private void determineChairman(String agName, int id){
