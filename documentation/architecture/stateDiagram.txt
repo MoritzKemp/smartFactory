@@ -1,0 +1,7 @@
+@startuml
+[*] --> Idle
+Idle --> Determining_Chairman : ~chairman
+Determining_Chairman --> Idle
+Idle --> Determining_Leader : ~leader & chairman
+Determining_Leader --> Idle
+@enduml

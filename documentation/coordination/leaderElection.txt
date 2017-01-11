@@ -1,0 +1,10 @@
+@startuml
+participant "Chairman" as chairman
+participant "Worker" as worker
+
+chairman -> worker : achieve(bid)
+worker -> chairman : tell(offer)
+
+chairman -> worker : tell(leader)
+
+@enduml

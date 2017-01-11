@@ -1,26 +1,26 @@
 @startuml
-[-> robot_leader : order
+
 == Announcement & Bidding ==
-robot_leader -> robot_42 : annoucement of goal
+Leader -> Worker : tell(orderAvailable)
 
 alt couldn't achieve goal
-	robot_42 -> robot_leader : refuse
+	Worker -> Leader : tell(refuse)
 else surely could achieve goal
-	robot_42 -> robot_leader : bid
+	Worker -> Leader : tell(offer)
 end
 
 == Award ==
 alt reject bid
-	robot_leader -> robot_42 : reject
+	Leader -> Worker : tell(reject)
 else accept bid
-	robot_leader -> robot_42 : award
+	Leader -> Worker : achieve(order)
 end
 
 == Expediting ==
 alt failed to achive goal
-	robot_42 -> robot_leader : failure
+	Worker -> Leader : tell(failure)
 else successful accomplished
-	robot_42 -> robot_leader : inform_done
+	Worker -> Leader : tell(success)
 end
 
 @enduml
