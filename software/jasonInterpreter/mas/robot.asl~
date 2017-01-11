@@ -29,59 +29,16 @@ robotName(Name, Id) :- .concat("robot", Id+1, Name).
 		?leader(LEADER);
 		informAboutLeader(LEADER+1);
 		!idle.
-+!idle : order(deliveredBearingBox,ID,false)[source(customer)] | order(deliveredBearingBox,ID,false)[source(customer),source(percept)]
-	<- .print("as you wish. Processing order to deliver bearing box");
-		!delegateOrder(deliveredBearingBox);
-		-order(deliveredBearingBox,ID,false)[source(customer),source(percept)];
-		-order(deliveredBearingBox,ID,false)[source(customer)];
-		+order(deliveredBearingBox,ID,true)[source(customer)];
-		!idle.
-+!idle : order(forceFittedBearingBox)[source(customer)]
-	<-	print("as you wish. Processing order to deliver force fitted bearing box");
-		!delegateOrder(forceFittedBearingBox);
++!idle : order(Order,ID,false)[source(customer)] | order(Order,ID,false)[source(customer),source(percept)]
+	<- .print("Delegate order ",Order);
+		!delegateOrder(Order);
+		-order(Order,ID,false)[source(customer),source(percept)];
+		-order(Order,ID,false)[source(customer)];
+		+order(Order,ID,true)[source(customer)];
 		!idle.
 +!idle <- .wait(1000); !idle.
 
 /**** Plans for orders ****/
-+!delegateOrder(Order) : true
-	<-	.broadcast(tell, orderAvailable(Order));
-		.print("Broadcast order proposal");
-		.wait(2000);
-		!awardedRobot(Order);
-		.abolish(proposal(_,_)).
-
-+!awardedRobot(Order) : proposal(_,_)
-	<-	.findall(offer(Y,X), proposal(X,Y), L);
-		.max(L, offer(V,P));
-		!announce(Order, L, P).
-	
-+!announce(_,[],_) .
-
-+!announce(Order, [offer(_, WinAg)|T], WinAg) : robotName(WinName, WinAg)
-	<- .send(WinName, achieve, Order);
-		!announce(Order, T, WinAg).
-
-+!announce(Order, [offer(_,LAg)|T], WinAg) : robotName(LName, LAg)
-	<-	.send(LName, tell, reject(Order));
-		!announce(Order, T, WinAg).
-		
-		
-+!awardedRobot(Order) : not proposal(_,_)
-	<- .print("Do myself.");
-		!Order.
-
-+orderAvailable(Order) : free & leader(Leader) & id(A) &robotName(LeaderName, Leader)
-	<- 	.random(C);
-		.send(LeaderName, tell, proposal(A, C));
-		.print("Send proposal with value ", C).
-+orderAvailable(Order) : not free & leader(Leader) & id(A)
-	<- .send(LeaderName, tell, reject(A));
-		.print("Reject proposal").
-
-		
-+reject(Order)
-	<- 	.print("Recieved a rejection.");
-		.abolish(reject(_)).
 
 +!deliveredBearingBox : free & leader(Leader) & robotName(N, Leader)
 	<-	-free;
@@ -95,7 +52,7 @@ robotName(Name, Id) :- .concat("robot", Id+1, Name).
 +!deliveredBearingBox : not free
 	<- 	.print("Not free, assume that anybody else will handle this").
 
-+!deliveredForceFittedBearingBox : free
++!deliveredForceFittedBearingBox : free & leader(Leader) & robotName(N, Leader)
 	<-	-free;
 		!atStock;
 		!haveBearingBox;
@@ -108,6 +65,7 @@ robotName(Name, Id) :- .concat("robot", Id+1, Name).
 		!droppedForceFittedBearingBox;
 		!returnedAsseblyAidTray;
 		finishForceFittedBearingBox;
+		.send(N, tell, finishOrder(deliveredForceFittedBearingBox));
 		+free.
 +!deliveredForceFittedBearingBox : not free
 	<-	.print("Not free, assume that anybody else will handle this").
@@ -190,7 +148,43 @@ robotName(Name, Id) :- .concat("robot", Id+1, Name).
 		.concat("robot", Z+1, R); 
 		.send(R, tell, bid(E,C)).
 		
++!delegateOrder(Order) : true
+	<-	.broadcast(tell, orderAvailable(Order));
+		.print("Broadcast order proposal");
+		.wait(4000);
+		!awardedRobot(Order);
+		.abolish(proposal(_,_)).
+
++!awardedRobot(Order) : proposal(_,_)
+	<-	.findall(offer(Y,X), proposal(X,Y), L);
+		.max(L, offer(V,P));
+		!announce(Order, L, P).
++!awardedRobot(Order) : not proposal(_,_)
+	<- .print("No proposals. Do it myself.");
+		!Order.
 		
++!announce(_,[],_) .
++!announce(Order, [offer(_, WinAg)|T], WinAg) : robotName(WinName, WinAg)
+	<- .send(WinName, achieve, Order);
+		!announce(Order, T, WinAg).
++!announce(Order, [offer(_,LAg)|T], WinAg) : robotName(LName, LAg)
+	<-	.send(LName, tell, reject(Order));
+		!announce(Order, T, WinAg).
+		
++orderAvailable(Order) : free & leader(Leader) & id(A) & robotName(LeaderName, Leader)
+	<- 	.random(C);
+		.send(LeaderName, tell, proposal(A, C));
+		.abolish(orderAvailable(Order));
+		.print("Send proposal with value ", C).
++orderAvailable(Order) : not free & leader(Leader) & id(A)& robotName(LeaderName, Leader)
+	<- 	.send(LeaderName, tell, reject(A));
+		.abolish(orderAvailable(Order));
+		.print("Reject proposal").
+
+		
++reject(Order)
+	<- 	.print("Recieved a rejection.");
+		.abolish(reject(_)).		
 
 
 /***** Basic movement plans *****/

@@ -162,7 +162,8 @@ robotName(Name, Id) :- .concat("robot", Id+1, Name).
 +!awardedRobot(Order) : not proposal(_,_)
 	<- .print("No proposals. Do it myself.");
 		!Order.
-		
+
+/** [Head|Tail] **/
 +!announce(_,[],_) .
 +!announce(Order, [offer(_, WinAg)|T], WinAg) : robotName(WinName, WinAg)
 	<- .send(WinName, achieve, Order);
