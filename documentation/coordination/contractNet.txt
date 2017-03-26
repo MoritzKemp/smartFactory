@@ -1,26 +1,26 @@
 @startuml
 
 == Announcement & Bidding ==
-Leader -> Worker : tell(orderAvailable)
+Manager -> Worker : tell(taskAvailable)
 
 alt couldn't achieve goal
-	Worker -> Leader : tell(refuse)
+	Worker -> Manager : tell(refuse)
 else surely could achieve goal
-	Worker -> Leader : tell(offer)
+	Worker -> Manager : tell(offer)
 end
 
 == Award ==
 alt reject bid
-	Leader -> Worker : tell(reject)
+	Manager -> Worker : tell(reject)
 else accept bid
-	Leader -> Worker : achieve(order)
+	Manager -> Worker : achieve(task)
 end
 
 == Expediting ==
 alt failed to achive goal
-	Worker -> Leader : tell(failure)
+	Worker -> Manager : tell(failure)
 else successful accomplished
-	Worker -> Leader : tell(success)
+	Worker -> Manager : tell(finishTask)
 end
 
 @enduml

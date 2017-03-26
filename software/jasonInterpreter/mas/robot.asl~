@@ -12,6 +12,41 @@ robotName(Name, Id) :- .concat("robot", Id, Name).
 
 
 /* Plans */
+
++order(Type, Id, false)[source(customer)] : true 
+	<- 	.print("Delegate order ",Type);
+		!delegatedTask(task(Type, Id));
+		-order(Type, Id, false)[source(customer)];
+		-order(Type, Id, false)[source(customer), _];
+		+task(Type, Id).
+
++taskAvailable(Type, From) : free
+	<- 	.random(Value);
+		-free
+		!offerMade(Value, From);
+		.abolish(taskAvailable(Type, From)).
+		
++taskAvailable(Type, From) : not free
+	<- 	!refuse(From);
+		.abolish(taskAvailable(Type, From));
+		.print("Refuse proposal").
+
++finishTask(Type, TaskId) : task(Type, TaskId)
+	<- 	.abolish(task(Type, TaskId)[source(_)]);
+		.abolish(finishTask(Type, TaskId));
+		.print("Task ", Type, " finished!").
+		
++!taskDone(Type, TaskId, ManagerId) : true
+	<- 	+task(Type, TaskId);
+		.print("Doning ", Type);
+		!Type;
+		?robotName(Manager, ManagerId);
+		.send(Manager, tell, finishTask(Type, TaskId));
+		-task(Type, TaskId)[source(_)];
+		+free.
+	
+		
+/***** BEGIN Coordination plans *****/
 +!coordinationStructure : not chairman(_) & not leader(_)
 	<- 	!determinedChairman;
 		?chairman(X);
@@ -20,6 +55,7 @@ robotName(Name, Id) :- .concat("robot", Id, Name).
 		{
 		!electedLeader;
 		?leader(Leader);
+		informEnv(Leader);
 		.print(Leader);
 		}.
 
@@ -28,111 +64,6 @@ robotName(Name, Id) :- .concat("robot", Id, Name).
 		.min(ROBOT_IDS, MIN);
 		+chairman(MIN).
 		
-+!idle : not chairman(X)
-	<-	determineChairmanById;
-		!idle.
-+!idle : finishOrder(A)
-	<- 	.findall(b(Id, A), order(A, Id, true), L);
-		.min(L, b(NewId, A));	
-		.abolish(order(A, NewId, true));
-		.abolish(finishOrder(A));
-		!idle.
-+!idle : chairman(X) & id(Y) & (X=Y) & not leader(_)
-	<-	!leader;
-		?leader(LEADER);
-		informAboutLeader(LEADER);
-		.print("robot", (LEADER), " is elected leader");
-		!idle.
-+!idle : order(Order,ID,false)[source(customer)] | order(Order,ID,false)[source(customer),source(percept)]
-	<- .print("Delegate order ",Order);
-		!delegateOrder(Order);
-		-order(Order,ID,false)[source(customer),source(percept)];
-		-order(Order,ID,false)[source(customer)];
-		+order(Order,ID,true)[source(customer)];
-		!idle.
-+!idle <- .wait(1000); !idle.
-
-/**** Plans for orders ****/
-
-+!deliveredBearingBox : free & leader(Leader) & robotName(N, Leader)
-	<-	-free;
-		!atStock;
-		!haveBearingBox;
-		!atDeliveryBox;
-		!droppedBearingBox;
-		finishBearingBox;
-		.send(N, tell, finishOrder(deliveredBearingBox));
-		+free.
-+!deliveredBearingBox : not free
-	<- 	.print("Not free, assume that anybody else will handle this").
-
-+!deliveredForceFittedBearingBox : free & leader(Leader) & robotName(N, Leader)
-	<-	-free;
-		!atStock;
-		!haveBearingBox;
-		!haveAxle;
-		!atAssemblyAidTray;
-		!haveAssemblyAidTray;
-		!atForceFittingMachine;
-		!haveForceFittedBearingBox;
-		!atDeliveryBox;
-		!droppedForceFittedBearingBox;
-		!returnedAsseblyAidTray;
-		finishForceFittedBearingBox;
-		.send(N, tell, finishOrder(deliveredForceFittedBearingBox));
-		+free.
-+!deliveredForceFittedBearingBox : not free
-	<-	.print("Not free, assume that anybody else will handle this").
-	
-+!atStock : pos(stock, X, Y) & pos(my, A, B) & (not X = A | not Y = B)
-	<-	!at(X, Y);
-		.print("arrive at stock").
-	
-+!haveBearingBox : not bearingBox
-	<- 	+bearingBox;
-		.print("have bearing box").
-
-+!haveAxle : not axle
-	<-	+axle;
-		.print("have axle").
-		
-+!atAssemblyAidTray : pos(aidTray, X, Y) & pos(my , A, B) & (not X = A | Y = B)
-	<- 	!at(X,Y);
-		.print("arrive at assembly aid tray").
-
-+!haveAssemblyAidTray : not assemblyAidTray
-	<-	+assemblyAidTray;
-		.print("have assembly aid tray").
-
-+!atForceFittingMachine : pos(forceFitting, X, Y) & pos(my, A, B) & (not X = A | Y = B)
-	<-	!at(X,Y);
-		.print("arrive at force fitting machine").
-		
-+!haveForceFittedBearingBox : not forceFittedBearingBox
-	<- 	-bearingBox;
-		-axle;
-		+forceFittedBearingBox;
-		.print("have force fitted bearing box").
-		
-+!returnedAsseblyAidTray: assemblyAidTray
-	<-	!atAssemblyAidTray;
-		dropAssemblyAidTray;
-		-assemblyAidTray.
-		
-+!atDeliveryBox : pos(deliveryBox, X, Y) & pos(my, A, B) & (not X = A | not Y = B)
-	<- 	!at(X,Y);
-		.print("arrive at delivery box").
-
-+!droppedBearingBox : bearingBox & (pos(deliveryBox, X, Y) & pos(my, A, B) & ( X = A & Y = B))
-	<- 	dropBearingBox;
-		-bearingBox.
-
-+!droppedForceFittedBearingBox : forceFittedBearingBox & (pos(deliveryBox, X, Y) & pos(my, A, B) & ( X = A & Y = B))
-	<-	dropForceFittedBearingBox;
-		-forceFittedBearingBox.
-
-		
-/***** Coordination plans *****/
 +!electedLeader : not leader(_) & chairman(X) & id(Y) & X = Y
 	<- .broadcast(achieve, bid);
 	   !bid;
@@ -153,80 +84,174 @@ robotName(Name, Id) :- .concat("robot", Id, Name).
 	   };
 	   .abolish(bid(_,_)).
 +!electedLeader : true <- .print("Not the chair").
-	   
-+!bid : chairman(ChairId) & id(MyId)
-	<- 	.print("attempting to vote");
-		.random(Vote);
-		.print(Vote);
+
++!bid : true
+	<- 	.random(Value);
+		?chairman(ChairId);
+		?id(MyId);
 		.concat("robot", ChairId, Recipient); 
-		.send(Recipient, tell, bid(MyId,Vote)).
+		.send(Recipient, tell, bid(MyId,Value));
+		.print("Vote was ", Value).
+
+/** END Coordinate plans**/
+
+/** BEGIN CNP **/
++!delegatedTask(task(Type, TaskId)) : true
+	<-	?id(MyId)
+		.broadcast(tell, taskAvailable(Type, MyId));
+		.print("Broadcast task proposal: ",Type," Waiting 2 sec for answers.");
+		.wait(2000);
+		!awardedRobot(Type,TaskId);
+		.abolish(offer(_,_)).
+
++!offerMade(Value, From) : true
+	<- 	?robotName(Recipient, From);
+		?id(MyId);
+		.send(Recipient, tell, offer(MyId, Value));
+		.print("Send offer with value ",Value).
 		
-+!delegateOrder(Order) : true
-	<-	.broadcast(tell, orderAvailable(Order));
-		.print("Broadcast order proposal");
-		.wait(4000);
-		!awardedRobot(Order);
-		.abolish(proposal(_,_)).
-
-+!awardedRobot(Order) : proposal(_,_)
-	<-	.findall(offer(Y,X), proposal(X,Y), L);
-		.max(L, offer(V,P));
-		!announce(Order, L, P).
-+!awardedRobot(Order) : not proposal(_,_)
-	<- .print("No proposals. Do it myself.");
-		!Order.
-
-/** [Head|Tail] **/
-+!announce(_,[],_) .
-+!announce(Order, [offer(_, WinAg)|T], WinAg) : robotName(WinName, WinAg)
-	<- .send(WinName, achieve, Order);
-		!announce(Order, T, WinAg).
-+!announce(Order, [offer(_,LAg)|T], WinAg) : robotName(LName, LAg)
-	<-	.send(LName, tell, reject(Order));
-		!announce(Order, T, WinAg).
++!refuse(From) : true
+	<- 	?robotName(Recipient, From);
+		?id(MyId);
+		.send(Recipient, tell, reject(MyId)).
 		
-+orderAvailable(Order) : free & leader(Leader) & id(A) & robotName(LeaderName, Leader)
-	<- 	.random(C);
-		.send(LeaderName, tell, proposal(A, C));
-		.abolish(orderAvailable(Order));
-		.print("Send proposal with value ", C).
-+orderAvailable(Order) : not free & leader(Leader) & id(A)& robotName(LeaderName, Leader)
-	<- 	.send(LeaderName, tell, reject(A));
-		.abolish(orderAvailable(Order));
-		.print("Reject proposal").
-
++!awardedRobot(Type, TaskId) : offer(_,_)
+	<-	.findall(o(Id,Value), offer(Id,Value), L);
+		.max(L, o(Id,Value));
+		!announce(Type, TaskId, L, Id).
++!awardedRobot(Type, TaskId) : not offer(_,_)
+	<- 	?id(MyId);
+		?robotName(Myself, MyId);
+		.send(Myself, achieve, taskDone(Type, TaskId, MyId)).
 		
-+reject(Order)
-	<- 	.print("Recieved a rejection.");
-		.abolish(reject(_)).		
++!announce(_,_,[],_) .
++!announce(Type, TaskId, [o(Winner,_)|T], Winner) : robotName(WinName, Winner)
+	<- 	?id(MyId);
+		.send(WinName, achieve, taskDone(Type, TaskId, MyId));
+		!announce(Type, TaskId, T, Winner).
++!announce(Type, TaskId, [o(Looser,_)|T], Winner) : robotName(LName, Looser)
+	<-	.send(LName, tell, reject(TaskId));
+		!announce(Type, TaskId, T, Winner).
+		
++reject(Id)
+	<- 	.abolish(reject(Id));
+		+free;
+		.print("Recieved a rejection from ", Id).
+/** END CNP **/
+		
+/**** Plans for orders ****/
+
+/** Level 0 **/
++!deliveredBearingBox : true
+	<-	!haveBearingBox;
+		!droppedBearingBox.
+
++!deliveredForceFittedBearingBox : true
+	<- 	!haveForceFittedBearingBox;
+		!delegatedTask(task(returnedAssemblyAidTray, 1));
+		!droppedForceFittedBearingBox.
+		
+/** Level 1 **/
++!haveForceFittedBearingBox : true
+	<- 	!haveAssemblyParts;
+		!loadedForceFittingMachine;
+		+forceFittedBearingBox.
+		
+		
++!haveAssemblyParts : true
+	<- 	!haveBearingBox;
+		!haveAxle;
+		!haveAssemblyAidTray.
+
++!loadedForceFittingMachine : axle & bearingBox & assemblyAidTray
+	<- 	!atForceFittingMachine;
+		-axle;
+		-bearingBox.
+	
+/** Level 2**/
++!haveBearingBox : not bearingBox
+	<- 	!atStock;
+		+bearingBox;
+		.print("have bearing box").
+
++!haveAxle : not axle
+	<-	!atStock;
+		+axle;
+		.print("have axle").
+		
++!haveAssemblyAidTray : not assemblyAidTray
+	<-	!atAssemblyAidTray;
+		+assemblyAidTray;
+		.print("have assembly aid tray").
+
++!returnedAssemblyAidTray: not assemblyAidTray
+	<-	!atForceFittingMachine;
+		+assemblyAidTray;
+		!returnedAssemblyAidTray.
++!returnedAssemblyAidTray: assemblyAidTray
+	<-	!atAssemblyAidTray;
+		-assemblyAidTray.
+
++!droppedBearingBox : bearingBox
+	<- 	!atDeliveryBox;
+		-bearingBox.
+
++!droppedForceFittedBearingBox : forceFittedBearingBox
+	<-	!atDeliveryBox;
+		-forceFittedBearingBox.
+		
+/** Level 3 **/
++!atStock : pos(stock, X, Y) & pos(my, A, B) & (not X = A | not Y = B)
+	<-	!at(X, Y);
+		.print("arrive at stock").
++!atStock : true.
+	
++!atAssemblyAidTray : pos(aidTray, X, Y) & pos(my , A, B) & (not X = A | Y = B)
+	<- 	!at(X,Y);
+		.print("arrive at assembly aid tray").
++!atAssemblyAidTray : true.
+
++!atForceFittingMachine : pos(forceFitting, X, Y) & pos(my, A, B) & (not X = A | Y = B)
+	<-	!at(X,Y);
+		.print("arrive at force fitting machine").
++!atForceFittingMachine : true.
+				
++!atDeliveryBox : pos(deliveryBox, X, Y) & pos(my, A, B) & (not X = A | not Y = B)
+	<- 	!at(X,Y);
+		.print("arrive at delivery box").
++!atDeliveryBox : true.		
+/** END Plans for orders **/
 
 
-/***** Basic movement plans *****/
+
+/***** BEGIN Basic movement plans *****/
 +!at(X, Y) : pos(my, A, B) & not (X=A & Y=B)
 	<- 	!atEast(X);
 		!atWest(X);
 		!atSouth(Y);
 		!atNorth(Y).
-+!at(X, Y) <- .print("arrived at destination").
++!at(X, Y) : true.
 
 +!atNorth(Y) : pos(my, A, B) & B > Y
 	<- 	moveNorth;
 		!atNorth(Y).
-+!atNorth(Y) <- .print("finish moving north").
++!atNorth(Y) : true.
 
 +!atWest(X) : pos(my, A, B) & A > X
 	<- 	moveWest;
 		!atWest(X).
-+!atWest(X) : .print("finish moving west").
++!atWest(X) : true.
 
 +!atEast(X) : pos(my, A, B) & A < X
 	<- 	moveEast;
 		!atEast(X).	
-+!atEast(X) <- .print("finish moving east").
++!atEast(X) : true.
 
 +!atSouth(Y) : pos(my, A, B) & B < Y
 	<- 	moveSouth;
 		!atSouth(Y).
-+!atSouth(Y) <- .print("finish moving south").
++!atSouth(Y) : true.
+
+/** END Basic movement plans **/
 
 
