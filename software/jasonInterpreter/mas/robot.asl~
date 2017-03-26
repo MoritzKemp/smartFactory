@@ -5,16 +5,29 @@
 
 /* Initial beliefs and rules */
 free. 				//initially the robot is free and capable to do a job
-robotName(Name, Id) :- .concat("robot", Id+1, Name).
+robotName(Name, Id) :- .concat("robot", Id, Name).
 
 /* Initial goals */
+!coordinationStructure.
 
-!idle.
 
 /* Plans */
++!coordinationStructure : not chairman(_) & not leader(_)
+	<- 	!determinedChairman;
+		?chairman(X);
+		?id(Y)
+		if(X==Y)
+		{
+		!electedLeader;
+		?leader(Leader);
+		.print(Leader);
+		}.
 
-/**** Waiting loop plans ***/
-
++!determinedChairman : not chairman(_)
+	<- 	?robots(ROBOT_IDS);
+		.min(ROBOT_IDS, MIN);
+		+chairman(MIN).
+		
 +!idle : not chairman(X)
 	<-	determineChairmanById;
 		!idle.
@@ -27,7 +40,8 @@ robotName(Name, Id) :- .concat("robot", Id+1, Name).
 +!idle : chairman(X) & id(Y) & (X=Y) & not leader(_)
 	<-	!leader;
 		?leader(LEADER);
-		informAboutLeader(LEADER+1);
+		informAboutLeader(LEADER);
+		.print("robot", (LEADER), " is elected leader");
 		!idle.
 +!idle : order(Order,ID,false)[source(customer)] | order(Order,ID,false)[source(customer),source(percept)]
 	<- .print("Delegate order ",Order);
@@ -119,34 +133,33 @@ robotName(Name, Id) :- .concat("robot", Id+1, Name).
 
 		
 /***** Coordination plans *****/
-+!leader : not leader(X) & id(Y) & chairman(Z) & (Y = Z) & robots(O)
++!electedLeader : not leader(_) & chairman(X) & id(Y) & X = Y
 	<- .broadcast(achieve, bid);
 	   !bid;
 	   .wait(2000); //wait for other agents to cast their vote
-	   //.print(f);
-	   .findall(b(V,A),bid(A,V)[source(self)],L);
-	   .max(L,b(V,W));
-	   .findall(c(V2,A2),bid(A2,V2),M);
-	   .max(M,c(V2,W2));
-	   
-	   if(V2 > V)
+	   .findall(b(Vote,Ag),bid(Ag,Vote)[source(self)],L);
+	   .max(L,b(Vote,W));
+	   .findall(c(Vote2,Ag2),bid(Ag2,Vote2),M);
+	   .max(M,c(Vote2,W2));	   
+	   if(Vote2 > Vote)
 	   {
 	   .broadcast(tell,leader(W2));
 	   -+leader(W2); 
 	   };
-	   if(V >= V2)
+	   if(Vote >= Vote2)
 	   {
 	   .broadcast(tell,leader(W));
 	   -+leader(W);
 	   };
 	   .abolish(bid(_,_)).
++!electedLeader : true <- .print("Not the chair").
 	   
-+!bid : chairman(Z) & id(E)
++!bid : chairman(ChairId) & id(MyId)
 	<- 	.print("attempting to vote");
-		.random(C);
-		.print(C);
-		.concat("robot", Z+1, R); 
-		.send(R, tell, bid(E,C)).
+		.random(Vote);
+		.print(Vote);
+		.concat("robot", ChairId, Recipient); 
+		.send(Recipient, tell, bid(MyId,Vote)).
 		
 +!delegateOrder(Order) : true
 	<-	.broadcast(tell, orderAvailable(Order));
@@ -162,7 +175,8 @@ robotName(Name, Id) :- .concat("robot", Id+1, Name).
 +!awardedRobot(Order) : not proposal(_,_)
 	<- .print("No proposals. Do it myself.");
 		!Order.
-		
+
+/** [Head|Tail] **/
 +!announce(_,[],_) .
 +!announce(Order, [offer(_, WinAg)|T], WinAg) : robotName(WinName, WinAg)
 	<- .send(WinName, achieve, Order);
@@ -214,3 +228,5 @@ robotName(Name, Id) :- .concat("robot", Id+1, Name).
 	<- 	moveSouth;
 		!atSouth(Y).
 +!atSouth(Y) <- .print("finish moving south").
+
+

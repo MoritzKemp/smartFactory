@@ -25,7 +25,7 @@ public class BearingFactory extends Environment {
 	public static final int grid_height = 20;
 	public static final int grid_width = 20;
 	public static final int nAg = 3;
-        public String leaderId;
+        public String leaderName;
         public int uuid;
 	
 	//Graphical key of static objects
@@ -35,7 +35,7 @@ public class BearingFactory extends Environment {
 	public static final int delivery_box = 64;
 	
 	//Static object locations
-	public static final Location stockLoc 			= new Location(3, 2);
+	public static final Location stockLoc 		= new Location(3, 2);
 	public static final Location aidTrayLoc 		= new Location(15, 2); 
 	public static final Location forceFittingLoc 	= new Location(18, 7);
 	public static final Location deliveryBoxLoc 	= new Location(6, 17); 
@@ -45,9 +45,6 @@ public class BearingFactory extends Environment {
 	public static final Literal moveSouth = Literal.parseLiteral("moveSouth");
 	public static final Literal moveNorth = Literal.parseLiteral("moveNorth");
 	public static final Literal moveWest = Literal.parseLiteral("moveWest");
-	public static final Literal dropBearingBox = Literal.parseLiteral("dropBearingBox");
-	public static final Literal dropForceFittedBearingBox = Literal.parseLiteral("dropForceFittedBearingBox");
-	public static final Literal dropAssemblyAidTray = Literal.parseLiteral("dropAssemblyAidTray");
 	public static final Literal finishBearingBox = Literal.parseLiteral("finishBearingBox");
 	public static final Literal finishForceFittedBearingBox = Literal.parseLiteral("finishForceFittedBearingBox");
 	public static final Literal envSize = Literal.parseLiteral("envSize");
@@ -83,7 +80,7 @@ public class BearingFactory extends Environment {
 		addPercept(forceFittingPos);
 		Literal deliveryBoxPos = Literal.parseLiteral("pos(deliveryBox, "+deliveryBoxLoc.x+","+deliveryBoxLoc.y+")");
 		addPercept(deliveryBoxPos);
-                Literal otherRobots = Literal.parseLiteral("robots([0, 1, 2])");
+                Literal otherRobots = Literal.parseLiteral("robots([1, 2, 3])");
 		addPercept(otherRobots);
                 
                 
@@ -126,21 +123,15 @@ public class BearingFactory extends Environment {
 				model.moveNorth(id);
 			} else if(action.equals(moveWest)) {
 				model.moveWest(id);
-			} else if(action.equals(dropBearingBox)) {
-				logger.info("drop bearing box");
-			} else if(action.equals(dropForceFittedBearingBox)) {
-				logger.info("drop force fitted bearing box");
-			} else if(action.equals(dropAssemblyAidTray)) {
-				logger.info("drop assembly aid tray");
 			} else if(action.equals(finishBearingBox)) {
-				removePercept(Literal.parseLiteral("order(bearingBox)"));
+				logger.info("Customer got bearing box.");
 			} else if(action.equals(finishForceFittedBearingBox)) {
-				removePercept(Literal.parseLiteral("order(forceFittedBearingBox)"));
+				logger.info("customer got force fitted bearing box");
 			} else if(action.equals(determineChairman)) {
 				determineChairman(agName, id);
-			} else if(action.getFunctor().equals("informAboutLeader")) {
-				this.leaderId = action.getTerm(0).toString();
-                                this.leaderId = "robot"+this.leaderId;
+			} else if(action.getFunctor().equals("informEnv")) {
+				this.leaderName = action.getTerm(0).toString();
+                                this.leaderName = "robot"+this.leaderName;
 			} else{
 				logger.info("action not defined");
 			}
@@ -170,17 +161,18 @@ public class BearingFactory extends Environment {
 			addPercept("robot"+(i+1), pos1);
                         
 			//Add own id percerpt
-			addPercept("robot"+(i+1), Literal.parseLiteral("id("+ i +")"));
+			addPercept("robot"+(i+1), Literal.parseLiteral("id("+ (i+1) +")"));
 		}
 	}
         
 	
 	private void btnBearingBoxHandler(){
 		logger.info("add order");
+                logger.info(this.leaderName);
 		openOrders.add("bearingBox");
                 this.uuid++;
 		Literal order = Literal.parseLiteral("order(deliveredBearingBox, "+this.uuid+ ", false)[source(customer)]");
-                addPercept(this.leaderId, order);
+                addPercept(this.leaderName, order);
 	}
 
 	private void btnForceFittedBearingBoxHandler(){
@@ -188,7 +180,7 @@ public class BearingFactory extends Environment {
 		openOrders.add("forceFittedBearingBox");
                 this.uuid++;
 		Literal order = Literal.parseLiteral("order(deliveredForceFittedBearingBox, "+this.uuid+ ", false)[source(customer)]");
-		addPercept(this.leaderId, order);
+		addPercept(this.leaderName, order);
 	}
 	
 	private void determineChairman(String agName, int id){
